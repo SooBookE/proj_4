@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tensorflowjs</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <input type="file" name="" id="" onchange="readExcel()" />
+    <button onclick="analize()">분석시작</button>
+    <script>
+      /*
+        2page
+        1) 아버지와 자식의 유전적인 키의 상관관계를 학습하여 예측하라.
+        2) 제공된 엑셀파일을 업로드하고 분석버튼을 누르면 동작 되도록 하라.
+            (Model Summary 도 표현)
+        3) 데이터 훈련시 에포크와 손실율의 차트를 그려라.
+      */
+      let father_train = [],
+        son_train = [],
+        father_test = [],
+        son_test = [];
+      const readExcel = (_) => {
+        let input = this.event.target;
+        let reader = new FileReader();
+        reader.onload = function () {
+          let data = reader.result;
+          //   console.log(data); // 데이터 확인용.
+          let wordBook = XLSX.read(data, { type: "binary" });
+          //   console.log(wordBook); // 데이터 확인용.
+          const x = wordBook.Sheets.train;
+          //   console.log(x); // 데이터 확인용.
+
+          for (let i = 2; i < 757; i++) {
+            let line = [],
+              line2 = [];
+            let str = String.fromCharCode(65) + i;
+            line.push(x[str].v);
+            let str2 = String.fromCharCode(66) + i;
+            line2.push(x[str2].v);
+
+            father_train.push(line);
+            son_train.push(line2);
+          }
+          //   console.log(father_train);
+          //   console.log(son_train);
+
+          const y = wordBook.Sheets.test;
+          //   console.log(y); // 데이터 확인용.
+
+          for (let i = 2; i < 325; i++) {
+            let line = [],
+              line2 = [];
+            let str = String.fromCharCode(65) + i;
+            line.push(x[str].v);
+            let str2 = String.fromCharCode(66) + i;
+            line2.push(x[str2].v);
+
+            father_test.push(line);
+            son_test.push(line2);
+          }
+          //   console.log(father_test);
+          //   console.log(son_test);
+        };
+        reader.readAsBinaryString(input.files[0]);
+      };
+      const analize = (_) => {
+        const x_train = tf.tensor(father_train);
+        const y_train = tf.tensor(son_train);
+        // console.log(tf.losses);
+        // const xX = x_train.arraySync();
+        // console.log(xX);
+        // console.log(x_train.arraySync());
+        const X = tf.input({ shape: [1] });
+        const Y = tf.layers.dense({ units: 50, activation: "relu" }).apply(X);
+        const A = tf.layers
+          .dense({ units: 50, activation: "sigmoid" })
+          .apply(Y);
+        const B = tf.layers.dense({ units: 50, activation: "relu" }).apply(A);
+        const C = tf.layers.dense({ units: 50, activation: "relu" }).apply(B);
+        const Z = tf.layers.dense({ units: 1, activation: "relu" }).apply(C);
+        const model = tf.model({ inputs: X, outputs: Z });
+        const compileParam = {
+          optimizer: tf.train.adam(),
+          //   loss: tf.losses.meanSquaredError,
+          loss: tf.losses.huberLoss, // loss: 5.xxx
+          //   loss: tf.losses.absoluteDifference, // loss : 5.xxx
+        };
+        model.compile(compileParam);
+
+        const x_test = tf.tensor(father_test);
+        const y_test = tf.tensor(son_test);
+
+        tfvis.show.modelSummary(
+          { name: "Model Architecture", tab: "Model" },
+          model
+        );
+
+        const metrics = ["loss", "val_loss", "acc", "val_acc"];
+        const container = {
+          name: "Model Training",
+          tab: "Model",
+          styles: { height: "1000px" },
+        };
+        const fitCallbacks = tfvis.show.fitCallbacks(container, metrics);
+
+        const fitParam = {
+          epochs: 300,
+          validationData: [x_test, y_test],
+          shuffle: true,
+          callbacks: fitCallbacks,
+        };
+
+        model.fit(x_train, y_train, fitParam).then((_) => {
+          (async function () {
+            const result = await model.predict(x_test);
+            result.print();
+            const result_arr = await result.arraySync();
+            const original = [];
+            const predicted = [];
+            for (let i = 0; i < father_test.length; i++) {
+              original[i] = await { x: father_test[i], y: son_test[i] };
+              predicted[i] = await { x: father_test[i], y: result_arr[i][0] };
+            }
+
+            tfvis.render.scatterplot(
+              { name: "Model Predictions vs Original Data" },
+              {
+                values: [original, predicted],
+                series: ["original", "predicted"],
+              },
+              {
+                xLabel: "Father's Height",
+                yLabel: "Son's Height",
+                height: 300,
+                zoomToFit: true,
+              }
+            );
+          })();
+          //   for (let i = 0; i < result.length; i++) {
+          //     const accurate =
+          //       (Math.abs(y_test[i][0] - result[i][0]) / y_test[i][0]) * 100;
+          //   }
+        });
+      };
+    </script>
+  </body>
+</html>
