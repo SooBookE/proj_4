@@ -8,11 +8,10 @@
     >
       <input
         type="file"
-        multiple
         name="file"
         id="fileInput"
         class="hidden-input"
-        @change="onChange"
+        @change="handleImage"
         ref="file"
         accept=".pdf,.jpg,.jpeg,.png"
       />
@@ -54,12 +53,25 @@ export default {
   data () {
     return {
       isDragging: false,
-      files: []
+      files: [],
+      remoteUrl: '',
+      image: ''
     }
   },
   methods: {
-    onChange () {
+    handleImage (e) {
       this.files = [...this.$refs.file.files]
+      const selectedImage = e.target.files[0]
+      this.createBase64Image(selectedImage)
+    },
+    createBase64Image (fileObject) {
+      const reader = new FileReader()
+
+      reader.onload = (e) => {
+        this.image = e.target.result
+        console.log(this.image)
+      }
+      reader.readAsDataURL(fileObject)
     },
     dragover (e) {
       e.preventDefault()
@@ -71,7 +83,7 @@ export default {
     drop (e) {
       e.preventDefault()
       this.$refs.file.files = e.dataTransfer.files
-      this.onChange()
+      this.handleImage()
       this.isDragging = false
     },
     generateURL (file) {
