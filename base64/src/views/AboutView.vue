@@ -26,18 +26,18 @@ import axios from 'axios'
 
 export default {
   name: 'AboutView',
-  data () {
+  data() {
     return {
       image: '',
       remoteUrl: ''
     }
   },
   methods: {
-    handleImage (e) {
+    handleImage(e) {
       const selectedImage = e.target.files[0] // get first file
       this.createBase64Image(selectedImage)
     },
-    createBase64Image (fileObject) {
+    createBase64Image(fileObject) {
       const reader = new FileReader()
 
       reader.onload = (e) => {
@@ -47,7 +47,7 @@ export default {
       }
       reader.readAsDataURL(fileObject)
     },
-    uploadImage () {
+    uploadImage() {
       const { image } = this
       axios
         .post('http://127.0.0.1:8081/upload', { image })

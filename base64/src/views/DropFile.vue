@@ -1,4 +1,5 @@
 <template>
+  <h1>합치기</h1>
   <div class="main">
     <div
       class="dropzone-container"
@@ -8,10 +9,11 @@
     >
       <input
         type="file"
+        multiple
         name="file"
         id="fileInput"
         class="hidden-input"
-        @change="handleImage"
+        @change="onChange"
         ref="file"
         accept=".pdf,.jpg,.jpeg,.png"
       />
@@ -39,65 +41,81 @@
               @click="remove(files.indexOf(file))"
               title="Remove file"
             >
-              <b class="de1">×</b>
+              <b class="de1">×</b><br />
             </button>
           </div>
         </div>
       </div>
     </div>
+    <div class="img_b">
+      <div id="app">
+        <input type="file" id="file" @change="file_change" />
+        <button id="button1" @click="button1_click">predict</button>
+        <p id="pred">predict</p>
+        <img src="../assets/logo.png" id="img" />
+      </div>
+      <span></span>
+    </div>
   </div>
 </template>
 
 <script>
+/* eslint-disable */
+
 export default {
-  data () {
+  data() {
     return {
       isDragging: false,
       files: [],
-      remoteUrl: '',
-      image: ''
-    }
+    };
   },
   methods: {
-    handleImage (e) {
-      this.files = [...this.$refs.file.files]
-      const selectedImage = e.target.files[0]
-      this.createBase64Image(selectedImage)
+    button1_click() {
+      const img = document.getElementById("img");
+      const span = document.querySelector("span");
+      console.log(img);
+      // Make a prediction with a selected image
+      mobilenet.load().then((model) => {
+        // Classify the image.
+        model.classify(img).then((predictions) => {
+          console.log(predictions);
+          // dis.style.display = 'none'
+          span.innerHTML =
+            predictions[0].className +
+            "<br>" +
+            (predictions[0].probability * 100).toFixed(2) +
+            "%";
+        });
+      });
     },
-    createBase64Image (fileObject) {
-      const reader = new FileReader()
-
-      reader.onload = (e) => {
-        this.image = e.target.result
-        console.log(this.image)
-      }
-      reader.readAsDataURL(fileObject)
+    onChange() {
+      this.files = [...this.$refs.file.files];
     },
-    dragover (e) {
-      e.preventDefault()
-      this.isDragging = true
+    dragover(e) {
+      e.preventDefault();
+      this.isDragging = true;
     },
-    dragleave () {
-      this.isDragging = false
+    dragleave() {
+      this.isDragging = false;
     },
-    drop (e) {
-      e.preventDefault()
-      this.$refs.file.files = e.dataTransfer.files
-      this.handleImage()
-      this.isDragging = false
+    drop(e) {
+      e.preventDefault();
+      this.$refs.file.files = e.dataTransfer.files;
+      this.onChange();
+      this.isDragging = false;
     },
-    generateURL (file) {
-      const fileSrc = URL.createObjectURL(file)
+    generateURL(file) {
+      const fileSrc = URL.createObjectURL(file);
       setTimeout(() => {
-        URL.revokeObjectURL(fileSrc)
-      }, 1000)
-      return fileSrc
+        URL.revokeObjectURL(fileSrc);
+      }, 1000);
+      return fileSrc;
     },
-    remove (i) {
-      this.files.splice(i, 1)
-    }
-  }
-}
+    remove(i) {
+      this.files.splice(i, 1);
+    },
+  },
+};
 </script>
 <style>
 .main {

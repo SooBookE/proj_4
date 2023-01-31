@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@tensorflow-models/mobilenet": "^2.1.0",
     "axios": "^1.2.6",
     "express": "^4.18.2",
     "mongoose": "^6.9.0"
