@@ -1,4 +1,5 @@
 <template>
+  <h1>Drag & Drop</h1>
   <div class="main">
     <div
       class="dropzone-container"

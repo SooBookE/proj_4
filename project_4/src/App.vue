@@ -1,7 +1,9 @@
 <template>
   <nav>
     <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
+    <router-link to="/about">About</router-link> |
+    <router-link to="/DropFile">DropFile</router-link> |
+    <router-link to="/mobilenet">mobilenet</router-link>
   </nav>
   <router-view />
   <div id="app">
@@ -33,10 +35,10 @@ nav a.router-link-exact-active {
 </style>
 
 <script>
-import DropFile from './components/DropFile.vue'
+import DropFile from './views/DropFile.vue'
 export default {
   name: 'App',
-  components: {
+  views: {
     DropFile
   }
 }

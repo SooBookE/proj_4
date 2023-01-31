@@ -16,11 +16,11 @@
   <!-- <p class="image-title">image</p>
     <div class="images" id="images"></div>
   </main> -->
-  <h1>Drag & Drop</h1>
+  <h1>실습</h1>
 </template>
 
 <style>
-:root {
+/* :root {
   --bgColor: #3a3a3a;
   --hoverBg: #616161;
   --text: #bbb;
@@ -83,15 +83,5 @@
   object-position: center;
   object-fit: cover;
   border-radius: 8px;
-}
+} */
 </style>
-
-<script>
-export default {
-  name: 'app',
-  data() {
-    return {}
-  },
-  methods: {}
-}
-</script>
