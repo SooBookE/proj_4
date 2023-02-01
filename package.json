@@ -1,0 +1,19 @@
+{
+  "name": "proj_4",
+  "version": "1.0.0",
+  "description": "team project 4",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SooBookE/proj_4.git"
+  },
+  "author": "KSH",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SooBookE/proj_4/issues"
+  },
+  "homepage": "https://github.com/SooBookE/proj_4#readme"
+}

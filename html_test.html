@@ -49,7 +49,7 @@
           //   console.log(father_train);
           //   console.log(son_train);
 
-          const y = wordBook.Sheets.test;
+          // const y = wordBook.Sheets.test;
           //   console.log(y); // 데이터 확인용.
 
           for (let i = 2; i < 325; i++) {
@@ -75,20 +75,21 @@
         // const xX = x_train.arraySync();
         // console.log(xX);
         // console.log(x_train.arraySync());
+        console.log(x_train);
+        console.log(y_train);
         const X = tf.input({ shape: [1] });
         const Y = tf.layers.dense({ units: 50, activation: "relu" }).apply(X);
-        const A = tf.layers
-          .dense({ units: 50, activation: "sigmoid" })
-          .apply(Y);
+        const A = tf.layers.dense({ units: 50, activation: "relu" }).apply(Y);
         const B = tf.layers.dense({ units: 50, activation: "relu" }).apply(A);
         const C = tf.layers.dense({ units: 50, activation: "relu" }).apply(B);
-        const Z = tf.layers.dense({ units: 1, activation: "relu" }).apply(C);
+        const Z = tf.layers.dense({ units: 1, activation: "sigmoid" }).apply(C);
         const model = tf.model({ inputs: X, outputs: Z });
         const compileParam = {
           optimizer: tf.train.adam(),
-          //   loss: tf.losses.meanSquaredError,
-          loss: tf.losses.huberLoss, // loss: 5.xxx
-          //   loss: tf.losses.absoluteDifference, // loss : 5.xxx
+          loss: tf.losses.meanSquaredError,
+          // loss: tf.losses.huberLoss, // loss: 5.xxx
+          // loss: tf.losses.absoluteDifference, // loss : 5.xxx
+          /* 손실함수는 그저 내가 줄이길 원하는 항목을 함수를 통해 확인하는 것이다. */
         };
         model.compile(compileParam);
 
@@ -108,23 +109,56 @@
         };
         const fitCallbacks = tfvis.show.fitCallbacks(container, metrics);
 
+        const x_train_max = x_train.max();
+        const x_train_min = x_train.min();
+        const y_train_max = y_train.max();
+        const y_train_min = y_train.min();
+
+        const normTrain_x = x_train
+          .sub(x_train_min)
+          .div(x_train_max.sub(x_train_min));
+        const normTrain_y = y_train
+          .sub(y_train_min)
+          .div(y_train_max.sub(y_train_min));
+
+        const x_test_max = x_test.max();
+        const x_test_min = x_test.min();
+        const y_test_max = y_test.max();
+        const y_test_min = y_test.min();
+
+        const normTest_x = x_test
+          .sub(x_test_min)
+          .div(x_test_max.sub(x_test_min));
+        const normTest_y = y_test
+          .sub(y_test_min)
+          .div(y_test_max.sub(y_test_min));
+
         const fitParam = {
-          epochs: 300,
-          validationData: [x_test, y_test],
+          epochs: 50,
+          validationData: [normTest_x, normTest_y],
+          // validationData: [x_test, y_test],
           shuffle: true,
           callbacks: fitCallbacks,
         };
 
-        model.fit(x_train, y_train, fitParam).then((_) => {
+        // model.fit(x_train, y_train, fitParam).then((_) => {
+        model.fit(normTrain_x, normTrain_y, fitParam).then((_) => {
           (async function () {
-            const result = await model.predict(x_test);
+            const result = await model.predict(normTest_x);
             result.print();
-            const result_arr = await result.arraySync();
+            const real_result = await result
+              .mul(x_test_max.sub(x_test_min))
+              .add(x_test_min);
+            real_result.print();
+            const result_arr = await real_result.arraySync();
             const original = [];
             const predicted = [];
             for (let i = 0; i < father_test.length; i++) {
-              original[i] = await { x: father_test[i], y: son_test[i] };
-              predicted[i] = await { x: father_test[i], y: result_arr[i][0] };
+              original[i] = await { x: father_test[i][0], y: son_test[i][0] };
+              predicted[i] = await {
+                x: father_test[i][0],
+                y: result_arr[i][0],
+              };
             }
 
             tfvis.render.scatterplot(
