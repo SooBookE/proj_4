@@ -2,9 +2,9 @@
   <article>
     <div id="app">
       <input type="file" id="file" @change="file_change" />
-      <button id="button1" @click="button1_click">predict</button>
-      <p id="pred">predict</p>
-      <!-- <img src="../assets/logo.png" id="img" /> -->
+      <button id="button1" @click="button1_click">전송</button>
+      <p id="pred"></p>
+      <img src="" id="img" height="200" width="200" />
     </div>
     <span></span>
   </article>
@@ -39,6 +39,13 @@ export default {
             "%";
         });
       });
+    },
+    file_change(event) {
+      let fileReader = new FileReader();
+      fileReader.readAsDataURL(event.target.files[0]);
+      fileReader.onload = function (e) {
+        document.getElementById("img").src = e.target.result;
+      };
     },
   },
 };
