@@ -1,92 +1,201 @@
 <template>
-  <!-- Plugin -->
-  <link
-    rel="stylesheet"
-    href="https://rawgit.com/enyo/dropzone/master/dist/dropzone.css"
-  />
-  <form action="/">
-    <div>
-      <div class="container mt-10">
-        <div class="card bg-white">
-          <img :src="image" alt="card_image" />
-          <input
-            @change="handleImage"
-            class="custom-input"
-            type="file"
-            accept="image/*"
-          />
+  <h1>1page</h1>
+  <div class="main">
+    <div
+      class="dropzone-container"
+      @dragover="dragover"
+      @dragleave="dragleave"
+      @drop="drop"
+      @change="file_change"
+    >
+      <input
+        type="file"
+        multiple
+        name="file"
+        id="fileInput"
+        class="hidden-input"
+        @change="onChange"
+        ref="file"
+        accept=".pdf,.jpg,.jpeg,.png"
+      />
+
+      <!-- 드래그 했을때  -->
+      <label for="fileInput" class="file-label">
+        <div v-if="isDragging">Release to drop files here.</div>
+        <div v-else>
+          Drop files here or <u>click here</u>
+          to upload.
+        </div>
+      </label>
+
+      <div class="preview-container mt-4" v-if="files.length">
+        <div v-for="file in files" :key="file.name" class="preview-card">
+          <div class="img_c">
+            <img class="preview-img" :src="generateURL(file)" id="img" />
+            <span id="name" class="fname">
+              {{ file.name }}
+            </span>
+            <!-- <input type="file" id="file" @change="file_change" /> -->
+            <button id="file" @click="button_click">예측</button>
+
+            <button
+              class="ml-2"
+              type="button"
+              @click="remove(files.indexOf(file))"
+              title="Remove file"
+            >
+              <span class="de1">삭제</span><br /></button
+            ><br />
+          </div>
         </div>
       </div>
+      <span id="pred"></span>
     </div>
-  </form>
+  </div>
 </template>
 
 <script>
-import axios from 'axios'
+/* eslint-disable */
+import axios from "axios";
 
 export default {
-  name: 'AboutView',
+  name: "app",
   data() {
     return {
-      image: '',
-      remoteUrl: ''
-    }
+      isDragging: false,
+      files: [],
+    };
   },
   methods: {
-    handleImage(e) {
-      const selectedImage = e.target.files[0] // get first file
-      this.createBase64Image(selectedImage)
+    button_click() {
+      const img = document.getElementById("img");
+      const pred = document.getElementById("pred");
+      // console.log(img);
+      // Make a prediction with a selected image
+      mobilenet.load().then((model) => {
+        // Classify the image.
+        model.classify(img).then((predictions) => {
+          console.log(predictions);
+          pred.innerHTML =
+            predictions[0].className +
+            "<br>" +
+            (predictions[0].probability * 100).toFixed(2) +
+            "%";
+        });
+      });
     },
-    createBase64Image(fileObject) {
-      const reader = new FileReader()
+    onChange() {
+      this.files = [...this.$refs.file.files];
+    },
+    dragover(e) {
+      e.preventDefault();
+      this.isDragging = true;
+    },
+    dragleave() {
+      this.isDragging = false;
+    },
+    drop(e) {
+      e.preventDefault();
+      this.$refs.file.files = e.dataTransfer.files;
+      this.onChange();
+      this.isDragging = false;
+    },
+    generateURL(file) {
+      const fileSrc = URL.createObjectURL(file);
+      setTimeout(() => {
+        URL.revokeObjectURL(fileSrc);
+      }, 1000);
+      return fileSrc;
+    },
+    remove(i) {
+      this.files.splice(i, 1);
+      const de = document.getElementById("pred");
 
-      reader.onload = (e) => {
-        this.image = e.target.result
-        this.uploadImage()
-        console.log(this.image)
+      if (de == true) {
+        de.style.display = "block";
+      } else {
+        de.textContent = "";
       }
-      reader.readAsDataURL(fileObject)
     },
-    uploadImage() {
-      const { image } = this
-      axios
-        .post('http://127.0.0.1:8081/upload', { image })
-        .then((response) => {
-          this.remoteUrl = response.data.url
-        })
-        .catch((err) => {
-          return new Error(err.message)
-        })
-    }
-  }
-}
-</script>
+    file_change(event) {
+      let fileReader = new FileReader(); // 비동기적으로 파일의 내용을 읽는다
+      fileReader.readAsDataURL(event.target.files[0]); // readAsDataURL = 바이너리 파일을 Base64 Encode 문자열로 반환
+      let span = document.getElementById("name").textContent;
+      console.log(span);
+      fileReader.onload = function (e) {
+        // onload = 읽기 동작이 성공 했을때 발생
+        const img_src = (document.getElementById("img").src = e.target.result);
+        console.log(img_src);
 
+        axios({
+          url: "http://localhost:3000/",
+          method: "post",
+          data: {
+            key: span,
+            text: img_src,
+          },
+        }).then((res) => {
+          alert(res.data.message);
+        });
+      };
+    },
+  },
+};
+</script>
 <style>
-* {
-  font-family: Arial, Helvetica, sans-serif;
-}
-body {
-  background: #d8dddb;
-}
-.container {
+.main {
   display: flex;
+  flex-grow: 1;
+  align-items: center;
+  height: 100vh;
   justify-content: center;
-}
-.mt-10 {
-  margin-top: 10rem;
-}
-.bg-white {
-  background: #fff;
-}
-.card {
-  height: 25rem;
-  width: 50rem;
-  border-radius: 10px;
-  padding: 20px;
   text-align: center;
 }
-img {
-  width: 17rem;
+
+.dropzone-container {
+  margin-bottom: 500px;
+  padding: 4rem;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.hidden-input {
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+}
+
+.file-label {
+  font-size: 20px;
+  display: block;
+  cursor: pointer;
+}
+
+.preview-container {
+  display: flex;
+  margin-top: 2rem;
+}
+
+.preview-card {
+  display: flex;
+  border: 1px solid #a2a2a2;
+  padding: 5px;
+  margin-left: 5px;
+  width: 350px;
+}
+.preview-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 5px;
+  border: 1px solid #a2a2a2;
+  background-color: #a2a2a2;
+}
+.img_c {
+  display: flex;
+  align-items: center;
+  width: 700px;
+  justify-content: space-between;
 }
 </style>

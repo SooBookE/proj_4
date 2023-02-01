@@ -1,5 +1,5 @@
 <template>
-  <h1>합치기</h1>
+  <h1>Drag & Drop</h1>
   <div class="main">
     <div
       class="dropzone-container"
@@ -41,81 +41,52 @@
               @click="remove(files.indexOf(file))"
               title="Remove file"
             >
-              <b class="de1">×</b><br />
+              <b class="de1">×</b>
             </button>
           </div>
         </div>
       </div>
     </div>
-    <div class="img_b">
-      <div id="app">
-        <input type="file" id="file" @change="file_change" />
-        <button id="button1" @click="button1_click">predict</button>
-        <p id="pred">predict</p>
-        <img src="../assets/logo.png" id="img" />
-      </div>
-      <span></span>
-    </div>
   </div>
 </template>
 
 <script>
-/* eslint-disable */
-
 export default {
   data() {
     return {
       isDragging: false,
-      files: [],
-    };
+      files: []
+    }
   },
   methods: {
-    button1_click() {
-      const img = document.getElementById("img");
-      const span = document.querySelector("span");
-      console.log(img);
-      // Make a prediction with a selected image
-      mobilenet.load().then((model) => {
-        // Classify the image.
-        model.classify(img).then((predictions) => {
-          console.log(predictions);
-          // dis.style.display = 'none'
-          span.innerHTML =
-            predictions[0].className +
-            "<br>" +
-            (predictions[0].probability * 100).toFixed(2) +
-            "%";
-        });
-      });
-    },
     onChange() {
-      this.files = [...this.$refs.file.files];
+      this.files = [...this.$refs.file.files]
     },
     dragover(e) {
-      e.preventDefault();
-      this.isDragging = true;
+      e.preventDefault()
+      this.isDragging = true
     },
     dragleave() {
-      this.isDragging = false;
+      this.isDragging = false
     },
     drop(e) {
-      e.preventDefault();
-      this.$refs.file.files = e.dataTransfer.files;
-      this.onChange();
-      this.isDragging = false;
+      e.preventDefault()
+      this.$refs.file.files = e.dataTransfer.files
+      this.onChange()
+      this.isDragging = false
     },
     generateURL(file) {
-      const fileSrc = URL.createObjectURL(file);
+      const fileSrc = URL.createObjectURL(file)
       setTimeout(() => {
-        URL.revokeObjectURL(fileSrc);
-      }, 1000);
-      return fileSrc;
+        URL.revokeObjectURL(fileSrc)
+      }, 1000)
+      return fileSrc
     },
     remove(i) {
-      this.files.splice(i, 1);
-    },
-  },
-};
+      this.files.splice(i, 1)
+    }
+  }
+}
 </script>
 <style>
 .main {
