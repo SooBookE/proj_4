@@ -7,6 +7,7 @@
       @dragleave="dragleave"
       @drop="drop"
       @change="file_change"
+      @click="sendMessage()"
     >
       <input
         type="file"
@@ -14,7 +15,7 @@
         name="file"
         id="fileInput"
         class="hidden-input"
-        @change="onChange"
+        @change="onChange()"
         ref="file"
         accept=".pdf,.jpg,.jpeg,.png"
       />
@@ -32,20 +33,18 @@
         <div v-for="file in files" :key="file.name" class="preview-card">
           <div class="img_c">
             <img class="preview-img" :src="generateURL(file)" id="img" />
-            <span id="name" class="fname">
+            <span id="name">
               {{ file.name }}
             </span>
-            <!-- <input type="file" id="file" @change="file_change" /> -->
-            <button id="file" @click="button_click">예측</button>
-
+            <button @click="button_click">예측</button>
             <button
               class="ml-2"
               type="button"
               @click="remove(files.indexOf(file))"
               title="Remove file"
             >
-              <span class="de1">삭제</span><br /></button
-            ><br />
+              <span class="de1">삭제</span>
+            </button>
           </div>
         </div>
       </div>
@@ -57,20 +56,26 @@
 <script>
 /* eslint-disable */
 import axios from "axios";
-
 export default {
-  name: "app",
+  name: "chat",
+  // created() {
+  //   this.$socket.on('chat', (data) => {
+  //     console.log(data)
+  //     this.chatData.push(data)
+  //   })
+  // },
   data() {
     return {
       isDragging: false,
       files: [],
+      chatData: [],
     };
   },
   methods: {
     button_click() {
       const img = document.getElementById("img");
       const pred = document.getElementById("pred");
-      // console.log(img);
+      console.log(img);
       // Make a prediction with a selected image
       mobilenet.load().then((model) => {
         // Classify the image.
@@ -99,6 +104,9 @@ export default {
       this.$refs.file.files = e.dataTransfer.files;
       this.onChange();
       this.isDragging = false;
+      // this.file_chan(e.dataTransfer.files)
+      // this.file_chan()
+      this.file_change();
     },
     generateURL(file) {
       const fileSrc = URL.createObjectURL(file);
@@ -117,10 +125,11 @@ export default {
         de.textContent = "";
       }
     },
-    file_change(event) {
+    file_change() {
+      const input = document.querySelector(".hidden-input");
       let fileReader = new FileReader(); // 비동기적으로 파일의 내용을 읽는다
-      fileReader.readAsDataURL(event.target.files[0]); // readAsDataURL = 바이너리 파일을 Base64 Encode 문자열로 반환
-      let span = document.getElementById("name").textContent;
+      fileReader.readAsDataURL(input.files[0]); // readAsDataURL = 바이너리 파일을 Base64 Encode 문자열로 반환
+      let span = input.files[0].name;
       console.log(span);
       fileReader.onload = function (e) {
         // onload = 읽기 동작이 성공 했을때 발생
@@ -139,6 +148,7 @@ export default {
         });
       };
     },
+    sendMessage() {},
   },
 };
 </script>
@@ -149,7 +159,7 @@ export default {
   align-items: center;
   height: 100vh;
   justify-content: center;
-  text-align: center;
+  /* text-align: center; */
 }
 
 .dropzone-container {
