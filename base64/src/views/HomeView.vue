@@ -2,6 +2,11 @@
   <h1>2page</h1>
   <input type="file" name="" id="" v-on:change="readExcel" />
   <button v-on:click="analize">분석시작</button>
+  <input type="text" v-model.number="insert" />
+  <button @click="predict">예측하기</button>
+  <!-- <div v-if="result > 0">{{ result }}</div>
+  <div v-else>결과 표시 구간</div> -->
+  <div id="result"></div>
 </template>
 
 <script>
@@ -14,6 +19,8 @@ export default {
       son_train: [],
       father_test: [],
       son_test: [],
+      insert: 0,
+      result: 0,
     };
   },
   methods: {
@@ -157,6 +164,41 @@ export default {
               zoomToFit: true,
             }
           );
+        })();
+        model.save("localstorage://Training-Complete");
+        console.log("학습 저장 완료.");
+      });
+    },
+    predict() {
+      let size;
+      tf.loadLayersModel("localstorage://Training-Complete").then((model) => {
+        if (this.insert >= 150 && this.insert <= 300) {
+          size = [[this.insert]];
+        } else {
+          alert("다시 입력하세요.");
+          return;
+        }
+        // console.log(size)
+        const trans1 = this.father_test;
+        // console.log(trans1)
+        (async function () {
+          const x_test = await tf.tensor(trans1);
+          const x_test_max = await x_test.max();
+          const x_test_min = await x_test.min();
+          // console.log(x_test)
+
+          const xt = await tf.tensor(size);
+          const normTest_x = await xt
+            .sub(x_test_min)
+            .div(x_test_max.sub(x_test_min));
+
+          const Result = await model.predict(normTest_x);
+          const unnormResult = await Result.mul(x_test_max.sub(x_test_min)).add(
+            x_test_min
+          );
+          const result = await unnormResult.arraySync();
+          const div = document.getElementById("result");
+          div.innerHTML = result[0][0].toFixed(1) + "cm";
         })();
       });
     },
